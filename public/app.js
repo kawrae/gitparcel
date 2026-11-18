@@ -178,11 +178,7 @@ function renderFiles() {
     };
     return link;
   });
-  if (!links.length) {
-    const note = document.createElement('small');
-    note.textContent = 'No sources added';
-    links.push(note);
-  }
+  $('sources').hidden = !links.length;
   $('source-links').replaceChildren(...links);
   updateControls();
 }
@@ -199,7 +195,6 @@ function switchMode(next) {
     tab.setAttribute('aria-pressed', active);
   }
   const folder = mode === 'folder';
-  $('input-title').textContent = folder ? 'Add a repository folder' : 'Add release assets';
   $('input-hint').textContent = folder
     ? 'Paste a public repository or subfolder URL to load its files.'
     : 'Paste a public release or asset URL to load its downloads.';
