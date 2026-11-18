@@ -40,7 +40,8 @@ export function initLanguage(render, onError) {
     const current = ++request;
     try {
       if (language !== 'en' && !catalogs.has(language)) {
-        const url = new URL('./locales/' + language + '.json', import.meta.url);
+        const catalogLanguage = language === 'ar-PS' ? 'ar' : language;
+        const url = new URL('./locales/' + catalogLanguage + '.json', import.meta.url);
         const response = await fetch(url);
         if (!response.ok) throw new Error('Language unavailable');
         catalogs.set(language, await response.json());
@@ -55,6 +56,7 @@ export function initLanguage(render, onError) {
     messages = catalogs.get(language) || {};
     numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
     document.documentElement.lang = language;
+    document.documentElement.dir = language.startsWith('ar') ? 'rtl' : 'ltr';
     for (const option of options) {
       option.setAttribute('aria-checked', option.lang === language);
       if (option.lang === language)
