@@ -65,7 +65,7 @@ export function initLanguage(render, onError) {
       if (attribute) element.setAttribute(attribute, t(key));
       else element.textContent = t(key);
     }
-    document.title = t('Bundle builder') + ' · GitParcel';
+    document.title = t('GitHub to ZIP') + ' · GitParcel';
     document.querySelector('meta[name="description"]').content = document.querySelector(
       '.hero-copy p [data-i18n]',
     ).textContent;
@@ -73,7 +73,7 @@ export function initLanguage(render, onError) {
     if (remember) {
       try {
         localStorage.setItem('gitparcel-language', language);
-      } catch {}
+      } catch { }
     }
   }
 
@@ -140,6 +140,6 @@ export function initLanguage(render, onError) {
   try {
     const saved = localStorage.getItem('gitparcel-language');
     if (options.some((option) => option.lang === saved)) initial = saved;
-  } catch {}
+  } catch { }
   apply(initial, false);
 }
