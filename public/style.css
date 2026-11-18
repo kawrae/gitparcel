@@ -299,27 +299,52 @@ main {
   margin-block: 32px;
 }
 .hero {
+  position: relative;
+  isolation: isolate;
   overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 38%);
   align-items: center;
   min-height: 204px;
-  background-color: #1b2540;
-  background-image:
-    linear-gradient(to right, #ffffff0b 1px, transparent 1px),
-    linear-gradient(to bottom, #ffffff0b 1px, transparent 1px);
-  background-size: 24px 24px;
+  background: #06112a;
   color: #fff;
   border-radius: 15px;
   box-shadow: 0 5px 14px #19274513;
 }
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  background-image:
+    radial-gradient(circle at 8% 0%, #5267ee38 0, transparent 46%),
+    radial-gradient(circle at 82% 42%, #1678d936 0, #1678d912 24%, transparent 48%),
+    radial-gradient(circle at 18% 105%, #1c3e9b33 0, transparent 34%),
+    radial-gradient(circle at 68% 18%, #1554a626 0, transparent 28%),
+    radial-gradient(circle, #ffffff12 1px, transparent 1.2px),
+    linear-gradient(115deg, #102858 0%, #09172f 52%, #05070d 100%);
+  background-size:
+    auto,
+    auto,
+    auto,
+    auto,
+    24px 24px,
+    auto;
+  background-position: center;
+}
 .hero-copy {
+  position: relative;
+  z-index: 1;
   padding: 32px 0 34px clamp(25px, 3.6vw, 55px);
+}
+.parcel-art {
+  z-index: 1;
 }
 :root[data-theme='dark'] .hero p {
   color: var(--muted);
 }
 .source-link {
+  margin-inline-start: 0.3em;
   color: #91b9ff;
   font-family: var(--mono);
   white-space: nowrap;
