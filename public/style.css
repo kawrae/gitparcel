@@ -529,17 +529,9 @@ main {
   font-style: italic;
 }
 
-.label-head > span:not(.square-code) {
-  font: 5.5px/1.4 var(--mono);
+.label-head > span {
+  font: 8px/1.4 var(--mono);
   letter-spacing: 0.5px;
-}
-
-.square-code {
-  margin-left: auto;
-  width: 13px;
-  height: 13px;
-  border: 2px solid #353d53;
-  background: repeating-conic-gradient(#353d53 0 25%, transparent 0 50%) 0 0/5px 5px;
 }
 
 .label-body {
