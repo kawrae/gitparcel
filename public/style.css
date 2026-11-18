@@ -522,11 +522,10 @@ main {
   border-bottom: 1px solid #98a1b7;
 }
 
-.label-head > b {
-  font-size: 18px;
-  letter-spacing: -2px;
-  font-weight: 850;
-  font-style: italic;
+.label-head img {
+  display: block;
+  width: 21px;
+  height: 21px;
 }
 
 .label-head > span {
