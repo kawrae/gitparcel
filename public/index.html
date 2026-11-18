@@ -11,13 +11,6 @@
     <title>Bundle builder · GitParcel</title>
     <link rel="icon" href="./favicon.svg" />
     <link rel="stylesheet" href="./style.css" />
-    <script>
-      if (location.hostname === 'gitparcel.vercel.app') {
-        const analytics = document.createElement('script');
-        analytics.src = '/_vercel/insights/script.js';
-        document.head.append(analytics);
-      }
-    </script>
   </head>
 
   <body>
@@ -295,11 +288,28 @@
         <span
           ><i data-icon="shield"></i
           ><span data-i18n>ZIP archives are built in your browser.</span></span
-        ><a href="https://docs.github.com/en/rest" target="_blank" rel="noreferrer"
+        >
+        <button id="analytics-settings" aria-controls="analytics-prompt" data-i18n>
+          Analytics preferences
+        </button>
+        <a href="https://docs.github.com/en/rest" target="_blank" rel="noreferrer"
           ><span data-i18n>GitHub API docs</span><i data-icon="up-right"></i
         ></a>
       </footer>
     </main>
+    <section
+      class="analytics-prompt"
+      id="analytics-prompt"
+      aria-labelledby="analytics-title"
+      hidden
+    >
+      <h2 id="analytics-title" data-i18n>Allow visitor analytics?</h2>
+      <p data-i18n>GitParcel uses Vercel Web Analytics to count visitors and page views.</p>
+      <div class="analytics-choices">
+        <button type="button" data-consent="no" data-i18n>No</button>
+        <button type="button" data-consent="yes" data-i18n>Yes</button>
+      </div>
+    </section>
     <dialog id="guide">
       <div class="dialog-head">
         <h2 data-i18n>Quick guide</h2>

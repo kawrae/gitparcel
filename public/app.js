@@ -2,6 +2,7 @@ import { initLanguage, number, t } from './i18n.js';
 import { loadSource, downloadFile } from './github.js';
 import { createZip, uniquePath } from './archive.js';
 import { icon } from './icons.js';
+import { initAnalyticsConsent } from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const queue = new Map();
@@ -519,6 +520,7 @@ $('guide').onclick = (event) => {
   )
     $('guide').close();
 };
+initAnalyticsConsent();
 initLanguage(
   () => {
     setTheme(document.documentElement.dataset.theme);

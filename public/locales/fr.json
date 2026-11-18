@@ -1,4 +1,9 @@
 {
+  "Analytics preferences": "Préférences de mesure d’audience",
+  "Allow visitor analytics?": "Autoriser la mesure d’audience ?",
+  "GitParcel uses Vercel Web Analytics to count visitors and page views.": "GitParcel utilise Vercel Web Analytics pour compter les visiteurs et les pages vues.",
+  "No": "Non",
+  "Yes": "Oui",
   "Language": "Langue",
   "Workspace": "Espace de travail",
   "Main navigation": "Navigation principale",

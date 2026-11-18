@@ -1,4 +1,9 @@
 {
+  "Analytics preferences": "アクセス解析の設定",
+  "Allow visitor analytics?": "アクセス解析を許可しますか？",
+  "GitParcel uses Vercel Web Analytics to count visitors and page views.": "GitParcel は Vercel Web Analytics を使用して、訪問者数とページの閲覧数を集計します。",
+  "No": "いいえ",
+  "Yes": "はい",
   "Language": "言語",
   "Workspace": "ワークスペース",
   "Main navigation": "メインナビゲーション",

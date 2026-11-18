@@ -1047,8 +1047,57 @@ footer svg {
   height: 13px;
 }
 
-footer a:hover {
+footer a:hover,
+#analytics-settings:hover {
   text-decoration: underline;
+}
+
+#analytics-settings {
+  margin-left: auto;
+  padding: 4px 0;
+}
+footer {
+  flex-wrap: wrap;
+}
+.analytics-prompt {
+  position: fixed;
+  z-index: 5;
+  inset-inline-start: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(350px, calc(100% - 32px));
+  padding: 18px 20px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow:
+    0 6px 24px #10182d1c,
+    var(--shadow);
+}
+.analytics-prompt h2 {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+.analytics-prompt p {
+  margin: 7px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.analytics-choices {
+  display: flex;
+  gap: 8px;
+}
+.analytics-choices button {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-weight: 550;
+}
+.analytics-choices button:hover {
+  background: var(--subtle);
+  border-color: var(--muted);
 }
 
 dialog {
