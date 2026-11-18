@@ -1,3 +1,4 @@
+import { initLanguage, number, t } from './i18n.js';
 import { loadSource, downloadFile } from './github.js';
 import { createZip, uniquePath } from './archive.js';
 import { icon } from './icons.js';
@@ -17,10 +18,8 @@ for (const slot of document.querySelectorAll('[data-icon]'))
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   $('theme').innerHTML = icon(theme === 'dark' ? 'moon' : 'sun');
-  $('theme').setAttribute(
-    'aria-label',
-    'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme',
-  );
+  $('theme').title = t(theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  $('theme').setAttribute('aria-label', $('theme').title);
 }
 try {
   setTheme(localStorage.getItem('gitparcel-theme') || 'light');
@@ -36,41 +35,53 @@ $('theme').onclick = () => {
 };
 
 function formatSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024) return number(bytes) + ' B';
   const scale = bytes < 1024 ** 2 ? 1 : bytes < 1024 ** 3 ? 2 : 3;
-  return Number((bytes / 1024 ** scale).toFixed(1)) + ' ' + ['B', 'KiB', 'MiB', 'GiB'][scale];
+  return number(bytes / 1024 ** scale) + ' ' + ['B', 'KiB', 'MiB', 'GiB'][scale];
 }
 const selection = () => [...queue.values()].filter((f) => f.selected);
 const sum = (files) => files.reduce((n, f) => n + f.size, 0);
 
+// Keep the original messages so an in-progress transfer can switch languages.
+let lastFeedback = '';
+let lastProgress = null;
+function translate(message) {
+  if (typeof message === 'string') return t(message);
+  return (message.prefix || '') + t(message.key, message.values);
+}
 function feedback(message = '', error = false) {
-  $('feedback').textContent = message;
+  lastFeedback = message;
+  $('feedback').textContent = translate(message);
   $('feedback').hidden = !message;
   $('feedback').classList.toggle('error', error);
 }
-function progress({
-  status,
-  phase,
-  log,
-  percent = 0,
-  bytes = 0,
-  total = 0,
-  done = 0,
-  count = 0,
-  speed = '—',
-  state = 'idle',
-}) {
+function progress(info) {
+  lastProgress = info;
+  const {
+    status,
+    phase,
+    log,
+    percent = 0,
+    bytes = 0,
+    total = 0,
+    done = 0,
+    count = 0,
+    speed = null,
+    state = 'idle',
+  } = info;
   $('transfer').hidden = status === 'Idle' || (status === 'Ready' && total <= limit);
-  $('status').lastElementChild.textContent = status;
+  $('status').lastElementChild.textContent = t(status);
   $('status').dataset.state = state;
-  $('phase').textContent = phase;
-  $('percent').textContent = percent;
+  $('phase').textContent = t(phase);
+  $('percent').textContent = number(percent);
   $('progress-bar').setAttribute('aria-valuenow', percent);
   $('progress-bar').firstElementChild.style.width = percent + '%';
-  $('log').textContent = log;
+  $('log').textContent = info.archive
+    ? info.archive.name + ' · ' + formatSize(info.archive.size)
+    : translate(log);
   $('bytes').textContent = formatSize(bytes) + ' / ' + formatSize(total);
-  $('done').textContent = done + ' / ' + count;
-  $('speed').textContent = speed;
+  $('done').textContent = number(done) + ' / ' + number(count);
+  $('speed').textContent = speed === null ? '—' : formatSize(speed) + '/s';
 }
 function ready() {
   const files = selection();
@@ -99,9 +110,9 @@ function updateControls() {
   const chosen = selection();
   const visible = filtered();
   $('selected-size').textContent = formatSize(sum(chosen));
-  $('selected-count').textContent = chosen.length;
-  $('queue-count').textContent = queue.size;
-  $('total-count').textContent = queue.size + (queue.size === 1 ? ' file' : ' files');
+  $('selected-count').textContent = t('Selected: {count}', { count: chosen.length });
+  $('queue-count').textContent = number(queue.size);
+  $('total-count').textContent = t('Files: {count}', { count: queue.size });
   $('download').disabled = !!job || !chosen.length || sum(chosen) > limit;
   $('clear').disabled = !!job || !queue.size;
   $('select-all').disabled = !!job || !visible.length;
@@ -125,7 +136,7 @@ function renderFiles() {
     check.type = 'checkbox';
     check.checked = f.selected;
     check.disabled = !!job;
-    check.setAttribute('aria-label', 'Select ' + f.path);
+    check.setAttribute('aria-label', t('Select {path}', { path: f.path }));
     check.onchange = () => {
       f.selected = check.checked;
       updateControls();
@@ -141,7 +152,7 @@ function renderFiles() {
     row.insertCell().textContent = f.repo;
     row.insertCell().textContent = formatSize(f.size);
     const status = row.insertCell();
-    status.textContent = f.status;
+    status.textContent = t(f.status);
     activeRows.set(f.id, status);
     fragment.append(row);
   }
@@ -150,7 +161,7 @@ function renderFiles() {
     const cell = row.insertCell();
     cell.colSpan = 5;
     const more = document.createElement('button');
-    more.textContent = 'Show more files (' + (files.length - rowLimit) + ' remaining)';
+    more.textContent = t('Show more files ({count} remaining)', { count: files.length - rowLimit });
     more.onclick = () => {
       rowLimit += 100;
       renderFiles();
@@ -160,14 +171,16 @@ function renderFiles() {
   }
   $('file-list').replaceChildren(fragment);
   $('empty').hidden = !!files.length;
-  $('empty').querySelector('strong').textContent = queue.size
-    ? 'No matching files'
-    : 'Your bundle is empty';
-  $('empty').querySelector('p').textContent = queue.size
-    ? 'Try a different file name or repository.'
-    : 'Add a source above to start selecting files.';
+  $('empty').querySelector('strong').textContent = t(
+    queue.size ? 'No matching files' : 'Your bundle is empty',
+  );
+  $('empty').querySelector('p').textContent = t(
+    queue.size
+      ? 'Try a different file name or repository.'
+      : 'Add a source above to start selecting files.',
+  );
   const repos = [...new Set([...queue.values()].map((f) => f.repo))];
-  $('source-count').textContent = repos.length;
+  $('source-count').textContent = number(repos.length);
   const links = repos.map((repo) => {
     const link = document.createElement('button');
     link.textContent = repo;
@@ -184,7 +197,7 @@ function renderFiles() {
 }
 function setFileStatus(f, value) {
   f.status = value;
-  if (activeRows.has(f.id)) activeRows.get(f.id).textContent = value;
+  if (activeRows.has(f.id)) activeRows.get(f.id).textContent = t(value);
 }
 function switchMode(next) {
   savedInputs[mode] = $('source-url').value;
@@ -194,20 +207,25 @@ function switchMode(next) {
     tab.classList.toggle('active', active);
     tab.setAttribute('aria-pressed', active);
   }
+  $('source-url').value = savedInputs[mode];
+  renderMode();
+  feedback();
+}
+function renderMode() {
   const folder = mode === 'folder';
-  $('input-hint').textContent = folder
-    ? 'Paste a public repository or subfolder URL to load its files.'
-    : 'Paste a public release or asset URL to load its downloads.';
+  $('input-hint').textContent = t(
+    folder
+      ? 'Paste a public repository or subfolder URL to load its files.'
+      : 'Paste a public release or asset URL to load its downloads.',
+  );
   $('source-url').placeholder = folder
     ? 'github.com/owner/repo/tree/main/folder'
     : 'github.com/owner/repo/releases/tag/v1.0';
   $('source-url').setAttribute(
     'aria-label',
-    folder ? 'GitHub repository or folder URL' : 'GitHub release URL',
+    t(folder ? 'GitHub repository or folder URL' : 'GitHub release URL'),
   );
-  $('source-url').value = savedInputs[mode];
   $('example').querySelector('span').textContent = folder ? 'octocat / Hello-World' : 'cli / cli';
-  feedback();
 }
 document
   .querySelectorAll('[data-mode]')
@@ -251,9 +269,15 @@ try {
 }
 
 function explain(error) {
-  if (error instanceof TypeError && /fetch|network|load failed/i.test(error.message))
-    return 'Could not reach GitHub. Check your connection and retry.';
-  return error.message || 'The request could not be completed.';
+  const networkFailure =
+    error instanceof TypeError && /fetch|network|load failed/i.test(error.message);
+  return {
+    key: networkFailure
+      ? 'Could not reach GitHub. Check your connection and retry.'
+      : error.message || 'The request could not be completed.',
+    values: error.values,
+    prefix: error.file ? error.file + ' — ' : '',
+  };
 }
 async function load() {
   if (job) return;
@@ -283,7 +307,10 @@ async function load() {
     $('search').value = '';
     feedback(
       added
-        ? 'Added ' + added + (added === 1 ? ' file' : ' files') + ' from ' + files[0].repo + '.'
+        ? {
+            key: 'Files added from {repo}: {count}.',
+            values: { count: added, repo: files[0].repo },
+          }
         : 'These files are already in your queue.',
     );
     ready();
@@ -367,8 +394,7 @@ async function bundle() {
       total,
       done,
       count: files.length,
-      speed:
-        formatSize(Math.round(bytes / Math.max(0.1, (performance.now() - started) / 1000))) + '/s',
+      speed: Math.round(bytes / Math.max(0.1, (performance.now() - started) / 1000)),
     });
   }
   files.forEach((f) => (f.status = 'Queued'));
@@ -390,7 +416,8 @@ async function bundle() {
         done++;
       } catch (error) {
         if (!controller.signal.aborted) {
-          failure = new Error(file.name + ' — ' + explain(error));
+          failure = error;
+          failure.file = file.name;
           setFileStatus(file, 'Failed');
           controller.abort();
         }
@@ -447,7 +474,7 @@ async function bundle() {
     progress({
       status: 'Complete',
       phase: 'Archive ready',
-      log: name + ' · ' + formatSize(zip.size),
+      archive: { name, size: zip.size },
       percent: 100,
       bytes,
       total,
@@ -492,4 +519,15 @@ $('guide').onclick = (event) => {
   )
     $('guide').close();
 };
-renderFiles();
+initLanguage(
+  () => {
+    setTheme(document.documentElement.dataset.theme);
+    renderMode();
+    renderFiles();
+    $('feedback').textContent = translate(lastFeedback);
+    if ($('deflate').disabled) $('deflate').title = t('Deflate is unavailable in this browser.');
+    if (lastProgress) progress(lastProgress);
+    else ready();
+  },
+  () => feedback('Could not load this language. Please try again.', true),
+);

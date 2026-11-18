@@ -17,12 +17,61 @@
     <header class="topbar">
       <div class="top-inner">
         <a class="brand" href="./"><img src="./favicon.svg" alt="" /><span>GitParcel</span></a>
-        <nav aria-label="Main navigation">
-          <a href="#builder" aria-current="page"><i data-icon="layout"></i>Workspace</a>
+        <nav aria-label="Main navigation" data-i18n-aria>
+          <a href="#builder" aria-current="page"
+            ><i data-icon="layout"></i><span data-i18n>Workspace</span></a
+          >
         </nav>
         <div class="top-actions">
-          <button class="guide-button" data-guide><i data-icon="book"></i>Quick guide</button>
-          <button id="theme" aria-label="Switch to dark theme" title="Switch theme">
+          <button class="guide-button" data-guide>
+            <i data-icon="book"></i><span data-i18n>Guide</span>
+          </button>
+          <div class="language-picker">
+            <button
+              id="language"
+              class="language-control"
+              aria-label="Language"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="language-menu"
+            >
+              <i data-icon="globe"></i><span id="language-code">EN</span>
+              <i class="language-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="language-panel" hidden>
+              <div id="language-heading" data-i18n>Language</div>
+              <div id="language-menu" role="menu" aria-labelledby="language-heading">
+                <button role="menuitemradio" aria-checked="true" tabindex="-1" lang="en">
+                  English
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="fr">
+                  Français
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="es">
+                  Español
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="de">
+                  Deutsch
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="pl">
+                  Polski
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="uk">
+                  Українська
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="pt-BR">
+                  Português (Brasil)
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="ja">
+                  日本語
+                </button>
+                <button role="menuitemradio" aria-checked="false" tabindex="-1" lang="zh-Hans">
+                  简体中文
+                </button>
+              </div>
+            </div>
+          </div>
+          <button id="theme" aria-label="Switch to dark theme" title="Switch to dark theme">
             <i data-icon="sun"></i>
           </button>
         </div>
@@ -31,11 +80,15 @@
     <main id="builder">
       <div class="hero">
         <div class="hero-copy">
-          <h1>Bundle builder</h1>
+          <h1 data-i18n>Bundle builder</h1>
           <p>
-            An open-source tool for bundling public GitHub subfolders and release assets from
-            multiple repositories into one ZIP.&nbsp;ㅤㅤㅤ<a
+            <span data-i18n
+              >An open-source tool for bundling public GitHub subfolders and release assets from
+              multiple repositories into one ZIP.</span
+            >
+            <a
               class="source-link"
+              data-i18n
               href="https://github.com/kawrae/gitparcel"
               target="_blank"
               rel="noopener noreferrer"
@@ -49,7 +102,7 @@
           <div class="paper parcel-label">
             <div class="label-head"><img src="./favicon.svg" alt="" /><span>GITPARCEL</span></div>
             <div class="label-body">
-              <span>ARCHIVE FORMAT</span><strong>.ZIP</strong>
+              <span data-i18n>ARCHIVE FORMAT</span><strong>.ZIP</strong>
               <div class="label-route"><i></i><b></b><i></i></div>
             </div>
             <div class="barcode"></div>
@@ -61,12 +114,12 @@
           <section class="import-card card" aria-labelledby="input-title">
             <div class="import-body" id="canvas">
               <div class="import-head">
-                <h2 id="input-title">Add a source</h2>
-                <div class="mode-tabs" role="group" aria-label="Source type">
+                <h2 id="input-title" data-i18n>Add a source</h2>
+                <div class="mode-tabs" role="group" aria-label="Source type" data-i18n-aria>
                   <button class="active" data-mode="folder" aria-pressed="true">
-                    <i data-icon="folder"></i>Repo folder</button
+                    <i data-icon="folder"></i><span data-i18n>Repo folder</span></button
                   ><button data-mode="release" aria-pressed="false">
-                    <i data-icon="tag"></i>Release assets
+                    <i data-icon="tag"></i><span data-i18n>Release assets</span>
                   </button>
                 </div>
               </div>
@@ -83,11 +136,12 @@
                   />
                 </div>
                 <button class="primary" id="load" type="submit">
-                  Add source<i data-icon="arrow"></i>
+                  <span data-i18n>Add source</span><i data-icon="arrow"></i>
                 </button>
               </form>
               <div class="example-row">
-                Try an example<button id="example">
+                <span data-i18n>Try an example</span
+                ><button id="example">
                   <span>octocat / Hello-World</span><i data-icon="up-right"></i>
                 </button>
               </div>
@@ -96,7 +150,7 @@
           </section>
           <section class="contents card" aria-labelledby="files-heading">
             <div class="card-head">
-              <h2 id="files-heading">Bundle contents</h2>
+              <h2 id="files-heading" data-i18n>Bundle contents</h2>
               <span class="count" id="queue-count">0</span>
               <label class="search"
                 ><i data-icon="search"></i
@@ -104,9 +158,13 @@
                   type="search"
                   id="search"
                   placeholder="Filter files…"
+                  data-i18n-placeholder
                   aria-label="Search queued files"
+                  data-i18n-aria
               /></label>
-              <button id="clear" class="subtle" disabled><i data-icon="trash"></i>Clear</button>
+              <button id="clear" class="subtle" disabled>
+                <i data-icon="trash"></i><span data-i18n>Clear</span>
+              </button>
             </div>
             <div class="table-scroll">
               <table>
@@ -117,13 +175,14 @@
                         type="checkbox"
                         id="select-all"
                         aria-label="Select all visible files"
+                        data-i18n-aria
                         disabled
                       />
                     </th>
-                    <th>File</th>
-                    <th>Repository</th>
-                    <th>Size</th>
-                    <th>Status</th>
+                    <th data-i18n>File</th>
+                    <th data-i18n>Repository</th>
+                    <th data-i18n>Size</th>
+                    <th data-i18n>Status</th>
                   </tr>
                 </thead>
                 <tbody id="file-list"></tbody>
@@ -137,20 +196,19 @@
               </div>
             </div>
             <div class="queue-foot">
-              <span><b id="selected-count">0</b> selected</span
-              ><span id="total-count">0 files</span>
+              <span id="selected-count">Selected: 0</span><span id="total-count">Files: 0</span>
             </div>
           </section>
         </div>
         <div class="workspace-side">
           <aside class="export card" aria-labelledby="output-heading">
             <div class="card-head">
-              <h2 id="output-heading">Export settings</h2>
+              <h2 id="output-heading" data-i18n>Export settings</h2>
               <i data-icon="sliders"></i>
             </div>
             <fieldset id="settings">
-              <legend class="sr-only">Archive settings</legend>
-              <label class="field-label" for="archive-name">Archive name</label>
+              <legend class="sr-only" data-i18n>Archive settings</legend>
+              <label class="field-label" for="archive-name" data-i18n>Archive name</label>
               <div class="filename">
                 <input
                   id="archive-name"
@@ -159,27 +217,37 @@
                   autocomplete="off"
                 /><span>.zip</span>
               </div>
-              <span class="field-label" id="compression-label">Compression</span>
+              <span class="field-label" id="compression-label" data-i18n>Compression</span>
               <div class="segments" role="group" aria-labelledby="compression-label">
-                <button id="store" class="active" aria-pressed="true">Store</button
-                ><button id="deflate" aria-pressed="false">Deflate</button>
+                <button id="store" class="active" aria-pressed="true" data-i18n>Store</button
+                ><button id="deflate" aria-pressed="false" data-i18n>Deflate</button>
               </div>
               <label class="option"
-                ><span>Keep folder paths</span
+                ><span data-i18n>Keep folder paths</span
                 ><input type="checkbox" id="structure" checked role="switch" /><span
                   class="switch"
                 ></span
               ></label>
               <label class="option"
-                ><span>Include source manifest</span
+                ><span data-i18n>Include source manifest</span
                 ><input type="checkbox" id="manifest" role="switch" /><span class="switch"></span
               ></label>
             </fieldset>
             <div class="export-action">
-              <div class="size-row">Selected size<b id="selected-size">0 B</b></div>
-              <button id="download" disabled><i data-icon="download"></i>Download ZIP</button>
+              <div class="size-row">
+                <span data-i18n>Selected size</span><b id="selected-size">0 B</b>
+              </div>
+              <button id="download" disabled>
+                <i data-icon="download"></i><span data-i18n>Download ZIP</span>
+              </button>
             </div>
-            <section class="transfer" id="transfer" aria-label="Transfer progress" hidden>
+            <section
+              class="transfer"
+              id="transfer"
+              aria-label="Transfer progress"
+              data-i18n-aria
+              hidden
+            >
               <div class="transfer-head">
                 <span id="status"><span>Idle</span></span
                 ><b><span id="percent">0</span>%</b>
@@ -189,6 +257,7 @@
                 id="progress-bar"
                 role="progressbar"
                 aria-label="Build progress"
+                data-i18n-aria
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow="0"
@@ -196,49 +265,57 @@
                 <span></span>
               </div>
               <div class="metrics"><span id="bytes"></span><span id="speed"></span></div>
-              <small>Files <b id="done">0 / 0</b></small>
+              <small><span data-i18n>Files</span> <b id="done">0 / 0</b></small>
               <p id="log" role="status"></p>
-              <button id="cancel" hidden>Cancel</button>
+              <button id="cancel" hidden data-i18n>Cancel</button>
             </section>
           </aside>
-          <section id="sources" class="source-nav card" aria-label="Loaded sources" hidden>
+          <section
+            id="sources"
+            class="source-nav card"
+            aria-label="Loaded sources"
+            data-i18n-aria
+            hidden
+          >
             <div class="sources-heading">
-              Loaded sources <span class="count" id="source-count">0</span>
+              <span data-i18n>Loaded sources</span> <span class="count" id="source-count">0</span>
             </div>
             <div id="source-links"></div>
           </section>
         </div>
       </div>
       <footer>
-        <span><i data-icon="shield"></i>ZIP archives are built in your browser.</span
+        <span
+          ><i data-icon="shield"></i
+          ><span data-i18n>ZIP archives are built in your browser.</span></span
         ><a href="https://docs.github.com/en/rest" target="_blank" rel="noreferrer"
-          >GitHub API docs<i data-icon="up-right"></i
+          ><span data-i18n>GitHub API docs</span><i data-icon="up-right"></i
         ></a>
       </footer>
     </main>
     <dialog id="guide">
       <div class="dialog-head">
-        <h2>Quick guide</h2>
-        <button id="close-guide" aria-label="Close guide">×</button>
+        <h2 data-i18n>Quick guide</h2>
+        <button id="close-guide" aria-label="Close guide" data-i18n-aria>×</button>
       </div>
       <ol>
         <li>
-          <strong>Add your sources</strong>
-          <p>
+          <strong data-i18n>Add your sources</strong>
+          <p data-i18n>
             Paste a public GitHub repository, subfolder, release tag, or asset link. Add more links
             to combine repositories.
           </p>
         </li>
         <li>
-          <strong>Choose what to include</strong>
-          <p>
+          <strong data-i18n>Choose what to include</strong>
+          <p data-i18n>
             Filter and select files in Bundle contents. Store keeps the original bytes, while
             Deflate compresses them. Choose up to 512 MiB per archive.
           </p>
         </li>
         <li>
-          <strong>Download your ZIP</strong>
-          <p>
+          <strong data-i18n>Download your ZIP</strong>
+          <p data-i18n>
             GitParcel fetches up to six files at once and builds the archive in this tab. The app
             server streams public release assets when GitHub blocks a direct browser download.
           </p>

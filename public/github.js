@@ -49,18 +49,20 @@ export function parseSource(input, mode) {
 async function checked(url, signal, accept = 'application/vnd.github+json') {
   const res = await fetch(url, { headers: { Accept: accept }, signal, credentials: 'omit' });
   if (res.ok) return res;
-  let message = 'GitHub returned HTTP ' + res.status + '. Try again.';
+  let message = 'GitHub returned HTTP {code}. Try again.';
+  let values = { code: String(res.status) };
   if (res.status === 404)
     message = 'GitHub could not find this public repository, branch, or release.';
   if (res.status === 403 || res.status === 429) {
     const reset = Number(res.headers.get('x-ratelimit-reset'));
-    message =
-      'GitHub limited this request. Try again' +
-      (reset ? ' after ' + new Date(reset * 1000).toLocaleTimeString() : ' later') +
-      '.';
+    message = reset
+      ? 'GitHub limited this request. Try again after {time}.'
+      : 'GitHub limited this request. Try again later.';
+    values = { time: new Date(reset * 1000) };
   }
   const error = new Error(message);
   error.status = res.status;
+  error.values = values;
   throw error;
 }
 
@@ -199,12 +201,16 @@ export async function downloadFile(file, signal, onChunk) {
     length += value.length;
     if (length > file.size) {
       await reader.cancel();
-      throw new Error('GitHub returned unexpected content for ' + file.name + '.');
+      throw Object.assign(new Error('GitHub returned unexpected content for {name}.'), {
+        values: { name: file.name },
+      });
     }
     chunks.push(value);
     onChunk(value.length);
   }
   if (length !== file.size)
-    throw new Error('The download size did not match for ' + file.name + '. Please retry.');
+    throw Object.assign(new Error('The download size did not match for {name}. Please retry.'), {
+      values: { name: file.name },
+    });
   return new Uint8Array(await new Blob(chunks).arrayBuffer());
 }

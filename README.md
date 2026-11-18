@@ -20,6 +20,15 @@ server streams public release assets when GitHub blocks a direct browser downloa
 Run `npm run build` to copy the frontend into `dist/`. Full release-asset support requires the
 streaming endpoint in `scripts/serve.js`.
 
+## Translations
+
+English is the default. The language selector loads the chosen translation from `public/locales/`
+and remembers the choice in the browser. All languages share the same layout.
+
+To add a language, copy an existing JSON catalog, translate its values, and add the language to
+the selector in `public/index.html`. Keep the English keys and placeholders such as `{count}`
+and `{repo}` intact. Use the language button’s `lang` attribute as the catalog filename.
+
 ## License
 
 GitParcel is released under [the Unlicense](LICENSE).

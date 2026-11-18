@@ -1,5 +1,7 @@
 const paths = {
   layers: '<path d="m3 8 9-5 9 5-9 5zM3 12l9 5 9-5M3 16l9 5 9-5"/>',
+  globe:
+    '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
   layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
   folder: '<path d="M3 8V5h6l2 3h10v11H3z"/>',
   tag: '<path d="M3 4h8l10 10-7 7L3 10z"/><circle cx="7.5" cy="7.5" r="1"/>',

@@ -30,7 +30,7 @@ function header(size, signature, fields16, fields32) {
 }
 
 export async function createZip(entries, compress = false, signal, onProgress = () => {}) {
-  if (entries.length > 65535) throw new Error('Select fewer than 65,536 archive entries.');
+  if (entries.length > 65535) throw new Error('Choose fewer than 65,536 archive entries.');
   const files = [],
     directory = [];
   let offset = 0,

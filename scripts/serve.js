@@ -10,6 +10,7 @@ const portArg = process.argv.indexOf('--port');
 const port = Number(process.env.PORT || (portArg > 0 && process.argv[portArg + 1]) || 4173);
 const types = {
   '.html': 'text/html',
+  '.json': 'application/json',
   '.js': 'text/javascript',
   '.css': 'text/css',
   '.svg': 'image/svg+xml',
