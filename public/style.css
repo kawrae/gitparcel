@@ -16,6 +16,9 @@
   --shadow: 0 2px 5px #19203305, 0 1px 2px #19203304;
   --sans: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
   --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --scrollbar-track: #f5f6fa;
+  --scrollbar-thumb: #b7bdc9;
+  --scrollbar-thumb-hover: #969dab;
   font-family: var(--sans);
   font-size: 14px;
   color: var(--ink);
@@ -33,10 +36,35 @@
   --action: #495fdd;
   --tone: #202230;
   --shadow: none;
+  --scrollbar-track: #1e1e24;
+  --scrollbar-thumb: #555;
+  --scrollbar-thumb-hover: #888;
 }
 
 body {
   margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(36, 54, 77, 0.22);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 54, 77, 0.36);
+}
+
+:root {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 a {
@@ -1058,6 +1086,13 @@ footer a:hover,
 #analytics-settings {
   margin-left: auto;
   padding: 4px 0;
+}
+.footer-disclaimer {
+  width: 100%;
+  justify-content: center;
+  margin-top: 2px;
+  font-size: 10px;
+  letter-spacing: 0.1px;
 }
 footer {
   flex-wrap: wrap;
