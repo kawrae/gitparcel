@@ -22,15 +22,15 @@
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #10131d;
-  --surface: #1b202e;
-  --ink: #f1f3fc;
-  --muted: #b2bbd0;
-  --line: #353c4f;
-  --subtle: #242a3b;
+  --bg: #09090a;
+  --surface: #121213;
+  --ink: #f1f1f3;
+  --muted: #b0b0b8;
+  --line: #323235;
+  --subtle: #1d1d20;
   --accent: #adbbff;
   --action: #495fdd;
-  --tone: #2a3456;
+  --tone: #202230;
   --shadow: none;
 }
 
@@ -286,6 +286,9 @@ main {
 }
 .hero-copy {
   padding: 32px 0 34px clamp(25px, 3.6vw, 55px);
+}
+:root[data-theme='dark'] .hero p {
+  color: var(--muted);
 }
 .source-link {
   color: #91b9ff;
