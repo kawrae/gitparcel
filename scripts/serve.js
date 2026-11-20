@@ -2,59 +2,26 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { serveAsset } from './asset-proxy.js';
 
 const root = fileURLToPath(new URL('../public/', import.meta.url));
 const portArg = process.argv.indexOf('--port');
 const port = Number(process.env.PORT || (portArg > 0 && process.argv[portArg + 1]) || 4173);
 const types = {
-  '.html': 'text/html',
-  '.json': 'application/json',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
+  '.html': 'text/html; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.woff2': 'font/woff2',
 };
 const server = http.createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     const asset = /^\/api\/assets\/([a-z\d_-]+)\/([a-z\d_.-]+)\/(\d+)$/i.exec(pathname);
     if (asset && req.method === 'GET' && !['.', '..'].includes(asset[2])) {
-      if (req.headers['sec-fetch-site'] === 'cross-site') {
-        res.writeHead(403).end();
-        return;
-      }
-      const upstream =
-        'https://api.github.com/repos/' +
-        asset[1] +
-        '/' +
-        asset[2] +
-        '/releases/assets/' +
-        asset[3] +
-        '?binary=1';
-      const controller = new AbortController();
-      res.on('close', () => controller.abort());
-      try {
-        const response = await fetch(upstream, {
-          headers: { Accept: 'application/octet-stream', 'User-Agent': 'GitParcel' },
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          await response.body?.cancel();
-          res.writeHead(response.status).end();
-          return;
-        }
-        res.writeHead(200, {
-          'Content-Type': 'application/octet-stream',
-          'X-Content-Type-Options': 'nosniff',
-          'Cache-Control': 'no-store',
-          'Content-Disposition': 'attachment',
-        });
-        await pipeline(Readable.fromWeb(response.body), res);
-      } catch {
-        if (!res.headersSent) res.writeHead(502).end();
-        else res.destroy();
-      }
+      await serveAsset(req, res, asset[1], asset[2], asset[3]);
       return;
     }
     const filename = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
@@ -64,8 +31,7 @@ const server = http.createServer(async (req, res) => {
     }
     const body = await readFile(filename);
     res.writeHead(200, {
-      'Content-Type':
-        (types[path.extname(filename)] || 'application/octet-stream') + '; charset=utf-8',
+      'Content-Type': types[path.extname(filename)] || 'application/octet-stream',
       'Cache-Control': 'no-cache',
     });
     res.end(req.method === 'HEAD' ? undefined : body);

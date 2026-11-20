@@ -3,11 +3,12 @@ import { loadSource, downloadFile } from './github.js';
 import { createZip, uniquePath } from './archive.js';
 import { icon } from './icons.js';
 import { initAnalyticsConsent } from './analytics.js';
+import { maxBundleBytes, maxQueueEntries, maxQueueMetadataBytes } from './limits.js';
 
 const $ = (id) => document.getElementById(id);
 const queue = new Map();
 const savedInputs = { folder: '', release: '' };
-const limit = 512 * 1024 ** 2;
+let queueMetadataBytes = 0;
 let mode = 'folder',
   compress = false,
   job = null,
@@ -70,7 +71,7 @@ function progress(info) {
     speed = null,
     state = 'idle',
   } = info;
-  $('transfer').hidden = status === 'Idle' || (status === 'Ready' && total <= limit);
+  $('transfer').hidden = status === 'Idle' || (status === 'Ready' && total <= maxBundleBytes);
   $('status').lastElementChild.textContent = t(status);
   $('status').dataset.state = state;
   $('phase').textContent = t(phase);
@@ -86,7 +87,7 @@ function progress(info) {
 }
 function ready() {
   const files = selection();
-  const tooBig = sum(files) > limit;
+  const tooBig = sum(files) > maxBundleBytes;
   progress({
     status: files.length ? 'Ready' : 'Idle',
     phase: tooBig
@@ -114,7 +115,7 @@ function updateControls() {
   $('selected-count').textContent = t('Selected: {count}', { count: chosen.length });
   $('queue-count').textContent = number(queue.size);
   $('total-count').textContent = t('Files: {count}', { count: queue.size });
-  $('download').disabled = !!job || !chosen.length || sum(chosen) > limit;
+  $('download').disabled = !!job || !chosen.length || sum(chosen) > maxBundleBytes;
   $('clear').disabled = !!job || !queue.size;
   $('select-all').disabled = !!job || !visible.length;
   $('select-all').checked = visible.length > 0 && visible.every((f) => f.selected);
@@ -243,6 +244,7 @@ $('select-all').onchange = () => {
 };
 $('clear').onclick = () => {
   queue.clear();
+  queueMetadataBytes = 0;
   $('search').value = '';
   rowLimit = 100;
   feedback();
@@ -299,12 +301,18 @@ async function load() {
   });
   try {
     const files = await loadSource(input, mode, job.signal);
-    let added = 0;
-    for (const file of files)
-      if (!queue.has(file.id)) {
-        queue.set(file.id, { ...file, selected: true, status: 'Queued' });
-        added++;
-      }
+    const pending = new Map();
+    let metadataBytes = queueMetadataBytes;
+    for (const file of files) {
+      if (queue.has(file.id) || pending.has(file.id)) continue;
+      metadataBytes += file.metadataBytes;
+      if (queue.size + pending.size >= maxQueueEntries || metadataBytes > maxQueueMetadataBytes)
+        throw new Error('Queue limit reached. Clear the queue or add a smaller source.');
+      pending.set(file.id, { ...file, selected: true, status: 'Queued' });
+    }
+    for (const [id, file] of pending) queue.set(id, file);
+    queueMetadataBytes = metadataBytes;
+    const added = pending.size;
     $('search').value = '';
     feedback(
       added
@@ -368,9 +376,9 @@ async function bundle() {
   if (job) return;
   const files = selection(),
     total = sum(files);
-  if (!files.length || total > limit) return;
+  if (!files.length || total > maxBundleBytes) return;
   const includeManifest = $('manifest').checked;
-  if (files.length + Number(includeManifest) > 65535) {
+  if (files.length + Number(includeManifest) > maxQueueEntries) {
     feedback('Choose fewer than 65,536 archive entries.', true);
     return;
   }
@@ -437,6 +445,7 @@ async function bundle() {
         repository: f.repo,
         revision: f.ref,
         size: f.size,
+        ...(f.kind === 'release' ? { assetId: f.assetId, digest: f.digest } : {}),
       }));
       entries.push({
         name: 'manifest.json',

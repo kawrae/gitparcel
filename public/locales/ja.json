@@ -1,4 +1,10 @@
 {
+  "Source discovery limit reached. Choose a smaller folder or release.": "読み込み元の調査上限に達しました。もっと小さいフォルダーまたはリリースを選んでください。",
+  "This revision is ambiguous. Paste a GitHub permalink with the full commit SHA.": "このリンクではリビジョンを特定できません。コミット SHA 全体を含む GitHub のパーマリンクを貼り付けてください。",
+  "Queue limit reached. Clear the queue or add a smaller source.": "キューの上限に達しました。キューを空にするか、もっと小さいソースを追加してください。",
+  "The release proxy reached a transfer limit. Try again later or choose a smaller asset.": "リリース用プロキシの転送上限に達しました。後でもう一度試すか、もっと小さいアセットを選んでください。",
+  "Could not verify the release checksum for {name}.": "リリースファイル {name} のチェックサムを検証できませんでした。",
+  "Use HTTPS or localhost to verify release checksums.": "リリースファイルのチェックサムを検証するには HTTPS または localhost を使用してください。",
   "GitParcel is not affiliated with GitHub or GitHub, Inc.": "GitParcel は GitHub または GitHub, Inc. と提携していません。",
   "Analytics preferences": "アクセス解析の設定",
   "Allow visitor analytics?": "アクセス解析を許可しますか？",

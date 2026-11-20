@@ -1,4 +1,10 @@
 {
+  "Source discovery limit reached. Choose a smaller folder or release.": "Se alcanzó el límite al leer el origen. Elige una carpeta o una versión más pequeña.",
+  "This revision is ambiguous. Paste a GitHub permalink with the full commit SHA.": "La revisión de este enlace es ambigua. Pega un enlace permanente de GitHub con el SHA completo del commit.",
+  "Queue limit reached. Clear the queue or add a smaller source.": "Se alcanzó el límite de la cola. Vacíala o añade un origen más pequeño.",
+  "The release proxy reached a transfer limit. Try again later or choose a smaller asset.": "El proxy de descargas alcanzó un límite de transferencia. Inténtalo más tarde o elige un archivo más pequeño.",
+  "Could not verify the release checksum for {name}.": "No se pudo verificar la suma de comprobación del archivo de la versión {name}.",
+  "Use HTTPS or localhost to verify release checksums.": "Usa HTTPS o localhost para verificar las sumas de comprobación de los archivos de las versiones.",
   "GitParcel is not affiliated with GitHub or GitHub, Inc.": "GitParcel no está afiliado a GitHub ni a GitHub, Inc.",
   "Analytics preferences": "Preferencias de analítica",
   "Allow visitor analytics?": "¿Permitir las estadísticas de visitas?",

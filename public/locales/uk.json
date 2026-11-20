@@ -1,4 +1,10 @@
 {
+  "Source discovery limit reached. Choose a smaller folder or release.": "Досягнуто ліміту читання джерела. Виберіть меншу папку або менший випуск.",
+  "This revision is ambiguous. Paste a GitHub permalink with the full commit SHA.": "Ревізію за цим посиланням неможливо визначити однозначно. Вставте постійне посилання GitHub із повним SHA коміту.",
+  "Queue limit reached. Clear the queue or add a smaller source.": "Досягнуто ліміту черги. Очистьте її або додайте менше джерело.",
+  "The release proxy reached a transfer limit. Try again later or choose a smaller asset.": "Проксі для завантаження файлів випуску досяг ліміту передавання. Спробуйте пізніше або виберіть менший файл.",
+  "Could not verify the release checksum for {name}.": "Не вдалося перевірити контрольну суму файлу випуску {name}.",
+  "Use HTTPS or localhost to verify release checksums.": "Для перевірки контрольних сум файлів випуску використовуйте HTTPS або localhost.",
   "GitParcel is not affiliated with GitHub or GitHub, Inc.": "GitParcel не пов’язаний із GitHub або GitHub, Inc.",
   "Analytics preferences": "Налаштування аналітики",
   "Allow visitor analytics?": "Дозволити збір статистики відвідувань?",

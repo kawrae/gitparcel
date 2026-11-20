@@ -4,6 +4,9 @@ const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
   return value >>> 0;
 });
 
+// Keep the next suffix with its bundle's occupied-name set, including any reserved names.
+const suffixesBySet = new WeakMap();
+
 export function uniquePath(input, used, flat) {
   const parts = input
     .replaceAll('\\', '/')
@@ -11,11 +14,25 @@ export function uniquePath(input, used, flat) {
     .filter((p) => p && p !== '.' && p !== '..')
     .map((p) => p.replace(/[<>:"|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, '') || '_');
   const base = (flat ? parts.at(-1) : parts.join('/')) || 'file';
-  let path = base;
+  const key = base.toLowerCase();
+  if (!used.has(key)) {
+    used.add(key);
+    suffixesBySet.get(used)?.delete(key);
+    return base;
+  }
+  let suffixes = suffixesBySet.get(used);
+  if (!suffixes) {
+    suffixes = new Map();
+    suffixesBySet.set(used, suffixes);
+  }
   const extension =
     base.lastIndexOf('.') > base.lastIndexOf('/') + 1 ? base.lastIndexOf('.') : base.length;
-  for (let i = 2; used.has(path.toLowerCase()); i++)
-    path = base.slice(0, extension) + ' (' + i + ')' + base.slice(extension);
+  let suffix = suffixes.get(key) ?? 2;
+  let path;
+  do {
+    path = base.slice(0, extension) + ' (' + suffix++ + ')' + base.slice(extension);
+  } while (used.has(path.toLowerCase()));
+  suffixes.set(key, suffix);
   used.add(path.toLowerCase());
   return path;
 }

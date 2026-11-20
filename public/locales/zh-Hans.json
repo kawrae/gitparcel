@@ -1,4 +1,10 @@
 {
+  "Source discovery limit reached. Choose a smaller folder or release.": "已达到读取来源的上限。请选择较小的文件夹或发行版。",
+  "This revision is ambiguous. Paste a GitHub permalink with the full commit SHA.": "此链接中的修订版本不明确。请粘贴包含完整提交 SHA 的 GitHub 永久链接。",
+  "Queue limit reached. Clear the queue or add a smaller source.": "队列已达上限。请清空队列或添加较小的来源。",
+  "The release proxy reached a transfer limit. Try again later or choose a smaller asset.": "发行文件下载代理已达到传输上限。请稍后重试，或选择较小的文件。",
+  "Could not verify the release checksum for {name}.": "无法验证发行文件 {name} 的校验和。",
+  "Use HTTPS or localhost to verify release checksums.": "请使用 HTTPS 或 localhost 验证发行文件的校验和。",
   "GitParcel is not affiliated with GitHub or GitHub, Inc.": "GitParcel 与 GitHub 或 GitHub, Inc. 无任何关联。",
   "Analytics preferences": "访问统计设置",
   "Allow visitor analytics?": "允许统计访问量吗？",

@@ -1,7 +1,13 @@
+import { discoveryLimits, maxBundleBytes, maxQueueMetadataBytes } from './limits.js';
+
 const api = 'https://api.github.com/repos/';
 const encode = encodeURIComponent;
+const discoveryError = 'Source discovery limit reached. Choose a smaller folder or release.';
+const ambiguousRef =
+  'This revision is ambiguous. Paste a GitHub permalink with the full commit SHA.';
 
 export function parseSource(input, mode) {
+  if (input.length > 8192) throw new Error('Enter a valid GitHub repository URL.');
   let value = input.trim();
   if (/^[\w.-]+\/[\w.-]+$/.test(value)) value = 'github.com/' + value;
   if (!/^[a-z]+:\/\//i.test(value)) value = 'https://' + value;
@@ -49,6 +55,7 @@ export function parseSource(input, mode) {
 async function checked(url, signal, accept = 'application/vnd.github+json') {
   const res = await fetch(url, { headers: { Accept: accept }, signal, credentials: 'omit' });
   if (res.ok) return res;
+  await res.body?.cancel();
   let message = 'GitHub returned HTTP {code}. Try again.';
   let values = { code: String(res.status) };
   if (res.status === 404)
@@ -66,40 +73,99 @@ async function checked(url, signal, accept = 'application/vnd.github+json') {
   throw error;
 }
 
-async function json(url, signal) {
-  return (await checked(url, signal)).json();
+function metadataReader(signal, { requests, bytes, entries }) {
+  return async (url) => {
+    if (requests-- <= 0) throw new Error(discoveryError);
+    const response = await checked(url, signal);
+    if (Number(response.headers.get('content-length')) > bytes) {
+      await response.body?.cancel();
+      throw new Error(discoveryError);
+    }
+    // Fetch may decompress the body. Charge the actual bytes before buffering and parsing JSON.
+    const bounded = response.body.pipeThrough(
+      new TransformStream({
+        transform(chunk, controller) {
+          bytes -= chunk.byteLength;
+          if (bytes < 0) throw new Error(discoveryError);
+          controller.enqueue(chunk);
+        },
+      }),
+    );
+    const data = await new Response(bounded).json();
+    const records = Array.isArray(data) ? data : data.tree ?? data.assets;
+    if (Array.isArray(records)) entries -= records.length;
+    if (entries < 0) throw new Error(discoveryError);
+    return data;
+  };
 }
 
-async function folderFiles(source, signal) {
-  const { repo, tail } = source;
-  const base = api + repo;
-  let ref = 'HEAD',
-    commit,
-    folder = [];
-  if (!tail.length) commit = await json(base + '/commits/HEAD', signal);
-  else {
-    for (let length = 1; length <= tail.length; length++) {
-      ref = tail.slice(0, length).join('/');
-      try {
-        commit = await json(base + '/commits/' + encode(ref), signal);
-        folder = tail.slice(length);
-        break;
-      } catch (error) {
-        if (error.status !== 404 && error.status !== 422) throw error;
-      }
-    }
-    if (!commit) throw new Error('Could not find the branch or tag in this link.');
+async function resolveFolder(base, tail, json) {
+  const missing = 'Could not find the branch or tag in this link.';
+  async function getCommit(ref) {
+    const { sha, commit } = await json(base + '/commits/' + encode(ref) + '?per_page=1');
+    return { sha, tree: commit.tree };
   }
+  async function getCommitObject(sha) {
+    const commit = await json(base + '/git/commits/' + encode(sha.toLowerCase()));
+    if (commit.sha !== sha.toLowerCase()) throw new Error(missing);
+    return commit;
+  }
+  if (!tail.length) return { commit: await getCommit('HEAD'), folder: [] };
+  const [first, ...rest] = tail;
+  if (/^[\da-f]{40}$/i.test(first)) {
+    return { commit: await getCommitObject(first), folder: rest };
+  }
+
+  const canNameCommit = first === 'HEAD' || /^[\da-f]{4,39}$/i.test(first);
+  const path = tail.join('/');
+  let match;
+  for (const namespace of ['heads', 'tags']) {
+    const refs = await json(base + '/git/matching-refs/' + namespace + '/' + encode(first));
+    const prefix = 'refs/' + namespace + '/';
+    for (const { ref, object } of refs) {
+      if (!ref.startsWith(prefix)) continue;
+      const name = ref.slice(prefix.length);
+      if (path !== name && !path.startsWith(name + '/')) continue;
+      // The generic commit endpoint can resolve a hexadecimal name as either a ref or a SHA.
+      if (match || (canNameCommit && name === first)) throw new Error(ambiguousRef);
+      match = { object, folder: path.slice(name.length + 1).split('/').filter(Boolean) };
+    }
+  }
+  if (canNameCommit) {
+    let commit;
+    try {
+      commit = await getCommit(first);
+    } catch (error) {
+      if (error.status !== 404 && error.status !== 422) throw error;
+    }
+    if (commit && (first === 'HEAD' || commit.sha.startsWith(first.toLowerCase()))) {
+      if (match) throw new Error(ambiguousRef);
+      return { commit, folder: rest };
+    }
+  }
+  if (!match) throw new Error(missing);
+  // An annotated tag can point to another tag. Each lookup shares the discovery budget.
+  let { object } = match;
+  while (object.type === 'tag') {
+    const tag = await json(base + '/git/tags/' + encode(object.sha));
+    object = tag.object;
+  }
+  if (object.type !== 'commit') throw new Error(missing);
+  return { commit: await getCommitObject(object.sha), folder: match.folder };
+}
+
+async function folderFiles({ repo, tail }, json, addFile) {
+  const base = api + repo;
+  const { commit, folder } = await resolveFolder(base, tail, json);
   const getTree = (sha, recursive = false) =>
-    json(base + '/git/trees/' + sha + (recursive ? '?recursive=1' : ''), signal);
-  let sha = commit.commit.tree.sha;
+    json(base + '/git/trees/' + sha + (recursive ? '?recursive=1' : ''));
+  let sha = commit.tree.sha;
   for (const part of folder) {
     const tree = await getTree(sha);
     const node = tree.tree.find((t) => t.type === 'tree' && t.path === part);
     if (!node) throw new Error('This folder was not found on the selected branch.');
     sha = node.sha;
   }
-  const items = [];
   async function walk(treeSha, prefix) {
     const tree = await getTree(treeSha, true);
     if (tree.truncated) {
@@ -114,7 +180,7 @@ async function folderFiles(source, signal) {
   }
   function add(node, prefix) {
     const path = [...folder, prefix + node.path].join('/');
-    items.push({
+    addFile({
       id: repo + '/' + commit.sha + '/' + path,
       repo,
       name: path,
@@ -133,45 +199,64 @@ async function folderFiles(source, signal) {
     });
   }
   await walk(sha, '');
-  if (!items.length) throw new Error('This folder contains no downloadable files.');
-  return items;
 }
 
-async function releaseFiles(source, signal) {
-  const { repo, tag, asset } = source;
+async function releaseFiles({ repo, tag, asset }, json, addFile) {
   const base = api + repo + '/releases/';
-  const release = await json(base + (tag ? 'tags/' + encode(tag) : 'latest'), signal);
-  const assets = [];
+  const release = await json(base + (tag ? 'tags/' + encode(tag) : 'latest'));
   for (let page = 1; ; page++) {
-    const batch = await json(base + release.id + '/assets?per_page=100&page=' + page, signal);
-    assets.push(...batch);
-    if (batch.length < 100) break;
+    const batch = await json(base + release.id + '/assets?per_page=100&page=' + page);
+    for (const a of batch) {
+      if (a.state !== 'uploaded' || (asset && a.name !== asset)) continue;
+      addFile({
+        id: repo + '/releases/assets/' + a.id,
+        assetId: a.id,
+        digest: a.digest ?? null,
+        repo,
+        name: a.name,
+        size: a.size,
+        kind: 'release',
+        path: repo + '/' + release.tag_name + '/' + a.name,
+        ref: release.tag_name,
+        url: a.url + '?download=1',
+        browserUrl: a.browser_download_url,
+      });
+      if (asset) return;
+    }
+    if (batch.length < 100) return;
   }
-  const items = assets
-    .filter((a) => a.state === 'uploaded' && (!asset || a.name === asset))
-    .map((a) => ({
-      id: repo + '/releases/assets/' + a.id,
-      assetId: a.id,
-      repo,
-      name: a.name,
-      size: a.size,
-      kind: 'release',
-      path: repo + '/' + release.tag_name + '/' + a.name,
-      ref: release.tag_name,
-      url: a.url + '?download=1',
-      browserUrl: a.browser_download_url,
-    }));
-  if (!items.length)
-    throw new Error('This release has no matching uploaded assets. Try another release tag.');
-  return items;
 }
 
-export function loadSource(value, mode, signal) {
+export async function loadSource(value, mode, signal, limits = discoveryLimits) {
   const source = parseSource(value, mode);
-  return mode === 'folder' ? folderFiles(source, signal) : releaseFiles(source, signal);
+  const json = metadataReader(signal, limits);
+  const items = [];
+  let metadataBytes = 0;
+  function addFile(file) {
+    // Also bound expanded paths and URLs retained after the API response is discarded.
+    file.metadataBytes = Object.values(file).reduce(
+      (sum, value) => sum + (typeof value === 'string' ? 2 * value.length : 0), 0,
+    );
+    metadataBytes += file.metadataBytes;
+    if (metadataBytes > maxQueueMetadataBytes) throw new Error(discoveryError);
+    items.push(file);
+  }
+  if (mode === 'folder') {
+    await folderFiles(source, json, addFile);
+    if (!items.length) throw new Error('This folder contains no downloadable files.');
+  } else {
+    await releaseFiles(source, json, addFile);
+    if (!items.length)
+      throw new Error('This release has no matching uploaded assets. Try another release tag.');
+  }
+  return items;
 }
 
 export async function downloadFile(file, signal, onChunk) {
+  if (!Number.isSafeInteger(file.size) || file.size < 0 || file.size > maxBundleBytes)
+    throw Object.assign(new Error('GitHub returned unexpected content for {name}.'), {
+      values: { name: file.name },
+    });
   let response;
   if (file.kind === 'folder') {
     try {
@@ -188,29 +273,47 @@ export async function downloadFile(file, signal, onChunk) {
       if (error.status) throw error;
       const route = '/api/assets/' + file.repo + '/' + file.assetId;
       response = await fetch(route, { signal, credentials: 'omit' });
-      if (!response.ok)
+      if (!response.ok) {
+        await response.body?.cancel();
+        if ([413, 429, 504].includes(response.status))
+          throw new Error('The release proxy reached a transfer limit. Try again later or choose a smaller asset.');
         throw new Error('The release download failed. Run the GitParcel app server and retry.');
+      }
     }
   }
-  const chunks = [];
+  const data = new Uint8Array(file.size);
   let length = 0;
-  const reader = response.body.getReader();
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    length += value.length;
-    if (length > file.size) {
-      await reader.cancel();
-      throw Object.assign(new Error('GitHub returned unexpected content for {name}.'), {
-        values: { name: file.name },
-      });
+  if (response.body) {
+    const reader = response.body.getReader();
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (length + value.length > file.size) {
+        await reader.cancel();
+        throw Object.assign(new Error('GitHub returned unexpected content for {name}.'), {
+          values: { name: file.name },
+        });
+      }
+      data.set(value, length);
+      length += value.length;
+      onChunk(value.length);
     }
-    chunks.push(value);
-    onChunk(value.length);
   }
   if (length !== file.size)
     throw Object.assign(new Error('The download size did not match for {name}. Please retry.'), {
       values: { name: file.name },
     });
-  return new Uint8Array(await new Blob(chunks).arrayBuffer());
+  signal.throwIfAborted();
+  if (file.kind === 'release' && file.digest != null) {
+    if (!globalThis.crypto?.subtle)
+      throw new Error('Use HTTPS or localhost to verify release checksums.');
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+    const hex = Array.from(hash, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    if (typeof file.digest !== 'string' || file.digest.toLowerCase() !== 'sha256:' + hex)
+      throw Object.assign(new Error('Could not verify the release checksum for {name}.'), {
+        values: { name: file.name },
+      });
+    signal.throwIfAborted();
+  }
+  return data;
 }
