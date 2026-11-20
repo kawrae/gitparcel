@@ -57,9 +57,8 @@ support requires the streaming endpoint in `scripts/serve.js`.
 ## Translations
 
 English is the default. Use the globe button next to **Guide** to switch to French, Spanish,
-German, Polish, Ukrainian, Brazilian Portuguese, Japanese, or Simplified Chinese. GitParcel
+German, Polish, Ukrainian, Brazilian Portuguese, Japanese, Simplified Chinese or Palestinian Arabic. GitParcel
 loads the chosen translation from `public/locales/` and remembers the choice in the browser.
-The available locales include Palestinian Arabic.
 
 To add a language, copy an existing JSON catalog, translate its values, and add the language to
 the selector in `public/index.html`. Keep the English keys and placeholders such as `{count}`
